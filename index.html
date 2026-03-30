@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Nuvem Esfumaçada | Chuva de Letras - Efeito Sombra no Chão Preto</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            background: #000000;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', 'Courier New', monospace, system-ui;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .world {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* céu escuro */
+        .sky {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 70%;
+            background: linear-gradient(180deg, #0a0a0a 0%, #1a1a2e 100%);
+            pointer-events: none;
+        }
+
+        /* container da nuvem */
+        .cloud {
+            position: absolute;
+            top: 12%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 340px;
+            height: 190px;
+            z-index: 15;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            filter: drop-shadow(0 8px 20px rgba(0,0,0,0.25));
+        }
+        
+        /* camada principal da nuvem - forma orgânica com blur suave */
+        .cloud-main {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(ellipse at 45% 55%, rgba(255,255,255,0.98) 0%, rgba(250,250,255,0.92) 50%, rgba(245,245,250,0.85) 100%);
+            border-radius: 55% 45% 60% 40% / 50% 45% 55% 50%;
+            filter: blur(6px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        /* camada intermediária para volume esfumaçado */
+        .cloud-mid {
+            position: absolute;
+            width: 92%;
+            height: 92%;
+            top: 4%;
+            left: 4%;
+            background: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.96) 0%, rgba(252,252,255,0.88) 60%, rgba(248,248,255,0.75) 100%);
+            border-radius: 52% 48% 58% 42% / 48% 52% 48% 52%;
+            filter: blur(8px);
+        }
+        
+        /* protuberâncias orgânicas sem geometria rígida */
+        .cloud-lobe {
+            position: absolute;
+            background: radial-gradient(ellipse at center, rgba(255,255,255,0.95) 0%, rgba(250,250,255,0.85) 100%);
+            border-radius: 60% 40% 55% 45% / 50% 55% 45% 50%;
+            filter: blur(5px);
+        }
+        
+        .lobe-1 {
+            width: 130px;
+            height: 130px;
+            top: -55px;
+            left: -15px;
+        }
+        
+        .lobe-2 {
+            width: 150px;
+            height: 150px;
+            top: -70px;
+            left: 65px;
+        }
+        
+        .lobe-3 {
+            width: 120px;
+            height: 120px;
+            top: -50px;
+            right: -10px;
+        }
+        
+        .lobe-4 {
+            width: 95px;
+            height: 95px;
+            top: -30px;
+            left: 160px;
+        }
+        
+        .lobe-5 {
+            width: 80px;
+            height: 80px;
+            top: -20px;
+            right: 70px;
+        }
+        
+        .lobe-6 {
+            width: 60px;
+            height: 60px;
+            bottom: 15px;
+            left: 25px;
+            filter: blur(4px);
+        }
+        
+        .lobe-7 {
+            width: 70px;
+            height: 70px;
+            bottom: 10px;
+            right: 30px;
+            filter: blur(4px);
+        }
+        
+        /* camada de fumaça suave para dar aspecto etéreo */
+        .cloud-haze {
+            position: absolute;
+            width: 105%;
+            height: 110%;
+            top: -5%;
+            left: -2.5%;
+            background: radial-gradient(ellipse at 40% 50%, rgba(255,255,245,0.35) 0%, rgba(255,255,250,0.15) 70%, rgba(255,255,255,0) 100%);
+            border-radius: 50% 45% 55% 50% / 55% 50% 50% 45%;
+            filter: blur(12px);
+            pointer-events: none;
+        }
+        
+        /* pequenos detalhes de fumaça flutuante */
+        .smoke-wisp {
+            position: absolute;
+            background: radial-gradient(circle, rgba(255,255,250,0.5) 0%, rgba(255,255,255,0.2) 70%, rgba(255,255,255,0) 100%);
+            border-radius: 50%;
+            filter: blur(6px);
+            pointer-events: none;
+            animation: wispFloat 8s ease-in-out infinite;
+        }
+        
+        @keyframes wispFloat {
+            0%, 100% {
+                transform: translateX(0px) translateY(0px) scale(1);
+                opacity: 0.4;
+            }
+            25% {
+                transform: translateX(8px) translateY(-6px) scale(1.1);
+                opacity: 0.6;
+            }
+            75% {
+                transform: translateX(-5px) translateY(5px) scale(0.95);
+                opacity: 0.5;
+            }
+        }
+        
+        .cloud:hover {
+            filter: drop-shadow(0 0 22px rgba(255,255,255,0.45));
+            transform: translateX(-50%) scale(1.02);
+        }
+        
+        .cloud:hover .cloud-main {
+            background: radial-gradient(ellipse at 45% 55%, rgba(255,255,255,1) 0%, rgba(252,252,255,0.96) 100%);
+        }
+        
+        /* brilho suave ao redor da nuvem */
+        .cloud-glow {
+            position: absolute;
+            top: 12%;
+            left: 50%;
+            width: 360px;
+            height: 210px;
+            background: radial-gradient(circle, rgba(255,255,220,0.2) 0%, rgba(255,255,255,0) 70%);
+            transform: translateX(-50%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 14;
+            animation: glowPulse 4s ease-in-out infinite;
+        }
+        
+        @keyframes glowPulse {
+            0%, 100% { opacity: 0.4; transform: translateX(-50%) scale(1); }
+            50% { opacity: 0.7; transform: translateX(-50%) scale(1.06); }
+        }
+        
+        /* chão preto com textura sutil */
+        .ground {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 30%;
+            background: #0a0a0a;
+            background-image: 
+                linear-gradient(45deg, #111111 1px, transparent 1px),
+                linear-gradient(-45deg, #111111 1px, transparent 1px);
+            background-size: 30px 30px;
+            border-top: 2px solid #222;
+            box-shadow: inset 0 8px 12px rgba(0,0,0,0.5), 0 -2px 0 #1f1f1f;
+            z-index: 5;
+            pointer-events: none;
+        }
+        
+        /* camada de sombra das letras (efeito de impacto) */
+        .shadow-layer {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 30%;
+            z-index: 20;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        
+        /* efeito de sombra/impacto quando a letra toca o chão */
+        .impact-shadow {
+            position: absolute;
+            pointer-events: none;
+            filter: blur(4px);
+            animation: shadowFade 0.6s ease-out forwards;
+            z-index: 19;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0) 100%);
+        }
+        
+        @keyframes shadowFade {
+            0% {
+                opacity: 0.8;
+                transform: scale(0.5);
+            }
+            50% {
+                opacity: 0.5;
+                transform: scale(1.2);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(1.8);
+                display: none;
+            }
+        }
+        
+        /* letras que estão caindo - menores */
+        .rain-letter {
+            position: absolute;
+            font-family: 'Courier New', 'Segoe UI', monospace;
+            font-weight: 500;
+            font-size: 1rem;
+            color: white;
+            text-shadow: 0 0 4px rgba(255,255,255,0.6), 0 1px 2px rgba(0,0,0,0.3);
+            pointer-events: none;
+            z-index: 25;
+            white-space: pre;
+            opacity: 0.9;
+            filter: drop-shadow(0 1px 1px rgba(0,0,0,0.2));
+            transition: transform 0.02s linear;
+            will-change: top, left;
+        }
+        
+        .info {
+            position: absolute;
+            bottom: 12px;
+            right: 18px;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(4px);
+            padding: 6px 14px;
+            border-radius: 60px;
+            font-size: 0.75rem;
+            font-family: monospace;
+            color: #aaa;
+            z-index: 30;
+            pointer-events: none;
+            font-weight: bold;
+            letter-spacing: 1px;
+            border: 1px solid #333;
+        }
+        
+        @media (max-width: 600px) {
+            .cloud { width: 280px; height: 160px; top: 8%;}
+            .cloud-glow { width: 300px; height: 180px;}
+            .lobe-1 { width: 100px; height: 100px; top: -45px; left: -10px; }
+            .lobe-2 { width: 120px; height: 120px; top: -55px; left: 50px; }
+            .lobe-3 { width: 95px; height: 95px; top: -40px; right: -5px; }
+            .rain-letter { font-size: 0.85rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="world">
+    <div class="sky"></div>
+    <div class="cloud">
+        <div class="cloud-main"></div>
+        <div class="cloud-mid"></div>
+        <div class="cloud-lobe lobe-1"></div>
+        <div class="cloud-lobe lobe-2"></div>
+        <div class="cloud-lobe lobe-3"></div>
+        <div class="cloud-lobe lobe-4"></div>
+        <div class="cloud-lobe lobe-5"></div>
+        <div class="cloud-lobe lobe-6"></div>
+        <div class="cloud-lobe lobe-7"></div>
+        <div class="cloud-haze"></div>
+    </div>
+    <div class="cloud-glow"></div>
+    <div class="ground"></div>
+    <div class="shadow-layer" id="shadowLayer"></div>
+    <div class="info">☁️ nuvem esfumaçada | ✨ chuva de letras | 💫 sombra no impacto</div>
+</div>
+
+<script>
+    (function() {
+        // elementos principais
+        const CLOUD_ELEMENT = document.querySelector('.cloud');
+        const SHADOW_LAYER = document.getElementById('shadowLayer');
+        const GROUND_TOP_PERCENT = 70; // o chão começa nos 70% da altura da tela
+        
+        // pool de letras (apenas caracteres simples)
+        const LETTERS_POOL = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+        
+        function getRandomLetter() {
+            return LETTERS_POOL.charAt(Math.floor(Math.random() * LETTERS_POOL.length));
+        }
+        
+        // controle da chuva
+        let isRaining = true;
+        let activeRainDrops = [];
+        let maxActiveDrops = 130;
+        let rainMakerInterval = null;
+        let animationFrameId = null;
+        
+        // criar fiapos de fumaça ao redor da nuvem
+        function createSmokeWisps() {
+            const cloudRect = CLOUD_ELEMENT.getBoundingClientRect();
+            const wispCount = 4 + Math.floor(Math.random() * 4);
+            
+            for (let i = 0; i < wispCount; i++) {
+                const wisp = document.createElement('div');
+                wisp.className = 'smoke-wisp';
+                const size = 35 + Math.random() * 45;
+                wisp.style.width = `${size}px`;
+                wisp.style.height = `${size}px`;
+                wisp.style.left = `${cloudRect.left - 15 + Math.random() * (cloudRect.width + 30)}px`;
+                wisp.style.top = `${cloudRect.top - 25 + Math.random() * (cloudRect.height + 35)}px`;
+                wisp.style.animationDelay = `${Math.random() * 5}s`;
+                wisp.style.animationDuration = `${6 + Math.random() * 5}s`;
+                wisp.style.opacity = '0';
+                document.body.appendChild(wisp);
+                
+                setTimeout(() => {
+                    if (wisp && wisp.parentNode) wisp.remove();
+                }, 8000);
+            }
+        }
+        
+        // função para criar uma letra caindo a partir da nuvem
+        function createRainLetter() {
+            if (!isRaining) return null;
+            if (activeRainDrops.length >= maxActiveDrops) return null;
+            
+            const cloudRect = CLOUD_ELEMENT.getBoundingClientRect();
+            if (cloudRect.width === 0) return null;
+            
+            // posição X aleatória dentro da nuvem
+            const minX = cloudRect.left + 25;
+            const maxX = cloudRect.right - 25;
+            if (minX >= maxX) return null;
+            const startX = Math.random() * (maxX - minX) + minX;
+            
+            // posição Y inicial: base da nuvem
+            const startY = cloudRect.bottom - 12;
+            
+            const letter = getRandomLetter();
+            const rainDiv = document.createElement('div');
+            rainDiv.className = 'rain-letter';
+            rainDiv.textContent = letter;
+            rainDiv.style.left = startX + 'px';
+            rainDiv.style.top = startY + 'px';
+            rainDiv.style.position = 'absolute';
+            
+            // variações visuais aleatórias - letras menores e sutis
+            const rot = (Math.random() - 0.5) * 12;
+            const size = 0.75 + Math.random() * 0.55; // tamanho entre 0.75rem e 1.3rem
+            rainDiv.style.transform = `rotate(${rot}deg)`;
+            rainDiv.style.fontSize = `${size}rem`;
+            rainDiv.style.opacity = 0.75 + Math.random() * 0.2;
+            rainDiv.style.fontWeight = '500';
+            
+            document.body.appendChild(rainDiv);
+            
+            const dropData = {
+                element: rainDiv,
+                posX: startX,
+                posY: startY,
+                velocity: 1.9 + Math.random() * 3.0, // velocidade de queda
+                letter: letter,
+                size: size,
+                width: rainDiv.offsetWidth,
+                height: rainDiv.offsetHeight,
+                hasHitGround: false
+            };
+            
+            activeRainDrops.push(dropData);
+            return dropData;
+        }
+        
+        // função para criar o efeito de sombra/impacto quando a letra toca o chão
+        function createImpactShadow(x, y, letter) {
+            const shadowDiv = document.createElement('div');
+            shadowDiv.className = 'impact-shadow';
+            
+            // tamanho variável baseado na letra (mais orgânico)
+            const size = 18 + Math.random() * 16;
+            shadowDiv.style.width = `${size}px`;
+            shadowDiv.style.height = `${size}px`;
+            shadowDiv.style.left = `${x - size/2}px`;
+            shadowDiv.style.top = `${y - size/2}px`;
+            shadowDiv.style.position = 'absolute';
+            
+            // cores de sombra baseadas na letra (efeito sutil de marca)
+            const intensity = 0.35 + Math.random() * 0.3;
+            shadowDiv.style.background = `radial-gradient(circle, rgba(255,255,255,${intensity}) 0%, rgba(200,200,255,${intensity*0.6}) 40%, rgba(255,255,255,0) 80%)`;
+            
+            SHADOW_LAYER.appendChild(shadowDiv);
+            
+            // remove a sombra após a animação
+            setTimeout(() => {
+                if (shadowDiv && shadowDiv.parentNode) {
+                    shadowDiv.remove();
+                }
+            }, 600);
+        }
+        
+        // função para criar um pequeno splash de partículas (efeito extra de impacto)
+        function createSplashEffect(x, y) {
+            for (let i = 0; i < 2; i++) {
+                const particle = document.createElement('div');
+                particle.style.position = 'absolute';
+                particle.style.width = '2px';
+                particle.style.height = '2px';
+                particle.style.backgroundColor = `rgba(255,255,255,${0.4 + Math.random() * 0.3})`;
+                particle.style.borderRadius = '50%';
+                particle.style.left = `${x + (Math.random() - 0.5) * 12}px`;
+                particle.style.top = `${y + (Math.random() - 0.5) * 8}px`;
+                particle.style.pointerEvents = 'none';
+                particle.style.zIndex = '26';
+                particle.style.animation = 'splashAnim 0.4s ease-out forwards';
+                
+                document.body.appendChild(particle);
+                
+                setTimeout(() => {
+                    if (particle && particle.parentNode) particle.remove();
+                }, 400);
+            }
+        }
+        
+        // animação de splash no CSS
+        const styleSheet = document.createElement("style");
+        styleSheet.textContent = `
+            @keyframes splashAnim {
+                0% {
+                    opacity: 0.6;
+                    transform: scale(1);
+                }
+                100% {
+                    opacity: 0;
+                    transform: scale(2) translateY(-8px);
+                }
+            }
+        `;
+        document.head.appendChild(styleSheet);
+        
+        // atualiza a posição das letras caindo e detecta impacto no chão
+        function updateRainDrops() {
+            if (!isRaining && activeRainDrops.length === 0) {
+                if (animationFrameId) cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
+                return;
+            }
+            
+            const groundYLimit = window.innerHeight * (GROUND_TOP_PERCENT / 100);
+            const groundTopY = groundYLimit - 2; // ponto de contato com o chão
+            
+            // percorrer todas as gotas
+            for (let i = activeRainDrops.length - 1; i >= 0; i--) {
+                const drop = activeRainDrops[i];
+                if (!drop || !drop.element) {
+                    activeRainDrops.splice(i, 1);
+                    continue;
+                }
+                
+                // mover a letra para baixo
+                drop.posY += drop.velocity;
+                drop.element.style.top = drop.posY + 'px';
+                
+                // verificar se a letra atingiu o chão
+                if (!drop.hasHitGround && drop.posY >= groundTopY) {
+                    drop.hasHitGround = true;
+                    
+                    // calcular ponto de impacto (centro da letra)
+                    const letterWidth = drop.element.offsetWidth;
+                    const letterHeight = drop.element.offsetHeight;
+                    const impactX = drop.posX + (letterWidth / 2);
+                    const impactY = groundTopY + 5;
+                    
+                    // criar efeito de sombra/impacto
+                    createImpactShadow(impactX, impactY, drop.letter);
+                    
+                    // criar pequeno splash
+                    createSplashEffect(impactX, impactY);
+                    
+                    // remover a letra do DOM (desaparece ao tocar o chão)
+                    if (drop.element && drop.element.parentNode) {
+                        drop.element.remove();
+                    }
+                    
+                    // remover do array de gotas ativas
+                    activeRainDrops.splice(i, 1);
+                }
+                // segurança: se passar muito além da tela, remove
+                else if (drop.posY > window.innerHeight + 100) {
+                    if (drop.element && drop.element.parentNode) {
+                        drop.element.remove();
+                    }
+                    activeRainDrops.splice(i, 1);
+                }
+            }
+            
+            // continuar animação se ainda houver gotas ou chuva ativa
+            if (activeRainDrops.length > 0 || isRaining) {
+                animationFrameId = requestAnimationFrame(updateRainDrops);
+            } else {
+                if (animationFrameId) cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
+            }
+        }
+        
+        // produção contínua de letras
+        function startRainProduction() {
+            if (rainMakerInterval) clearInterval(rainMakerInterval);
+            rainMakerInterval = setInterval(() => {
+                if (!isRaining) return;
+                // cria 1 a 2 letras por intervalo (chuva constante mas suave)
+                const dropsToCreate = Math.random() > 0.65 ? 2 : 1;
+                for (let i = 0; i < dropsToCreate; i++) {
+                    if (activeRainDrops.length < maxActiveDrops) {
+                        createRainLetter();
+                    }
+                }
+            }, 140); // ~ 7-10 letras por segundo
+        }
+        
+        function stopRainProduction() {
+            if (rainMakerInterval) {
+                clearInterval(rainMakerInterval);
+                rainMakerInterval = null;
+            }
+        }
+        
+        // interação com a nuvem: clique para uma chuva mais intensa
+        CLOUD_ELEMENT.addEventListener('click', (e) => {
+            e.stopPropagation();
+            // chuva rápida de letras extras
+            for (let i = 0; i < 10; i++) {
+                setTimeout(() => {
+                    if (activeRainDrops.length < maxActiveDrops + 15) {
+                        createRainLetter();
+                    }
+                }, i * 25);
+            }
+            
+            // efeito visual na nuvem - pulsação suave
+            CLOUD_ELEMENT.style.transform = 'translateX(-50%) scale(0.98)';
+            setTimeout(() => {
+                CLOUD_ELEMENT.style.transform = 'translateX(-50%) scale(1)';
+            }, 150);
+            
+            // criar um pequeno anel de luz no clique
+            const ring = document.createElement('div');
+            ring.style.position = 'absolute';
+            ring.style.left = e.clientX + 'px';
+            ring.style.top = e.clientY + 'px';
+            ring.style.width = '20px';
+            ring.style.height = '20px';
+            ring.style.border = '2px solid rgba(255,255,255,0.8)';
+            ring.style.borderRadius = '50%';
+            ring.style.transform = 'translate(-50%, -50%)';
+            ring.style.pointerEvents = 'none';
+            ring.style.animation = 'ringExpand 0.5s ease-out forwards';
+            ring.style.zIndex = '100';
+            document.body.appendChild(ring);
+            
+            setTimeout(() => {
+                if (ring && ring.parentNode) ring.remove();
+            }, 500);
+            
+            // criar puff de fumaça no clique
+            for (let i = 0; i < 5; i++) {
+                setTimeout(() => {
+                    const puff = document.createElement('div');
+                    puff.style.position = 'absolute';
+                    puff.style.width = `${25 + Math.random() * 35}px`;
+                    puff.style.height = `${25 + Math.random() * 35}px`;
+                    puff.style.left = `${e.clientX + (Math.random() - 0.5) * 40}px`;
+                    puff.style.top = `${e.clientY + (Math.random() - 0.5) * 30}px`;
+                    puff.style.background = 'radial-gradient(circle, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.2) 60%, rgba(255,255,255,0) 100%)';
+                    puff.style.borderRadius = '50%';
+                    puff.style.filter = 'blur(8px)';
+                    puff.style.pointerEvents = 'none';
+                    puff.style.animation = 'puffFade 0.6s ease-out forwards';
+                    puff.style.zIndex = '100';
+                    document.body.appendChild(puff);
+                    
+                    setTimeout(() => {
+                        if (puff && puff.parentNode) puff.remove();
+                    }, 600);
+                }, i * 40);
+            }
+        });
+        
+        // animação de anel e puff no CSS
+        const ringStyle = document.createElement('style');
+        ringStyle.textContent = `
+            @keyframes ringExpand {
+                0% {
+                    width: 10px;
+                    height: 10px;
+                    opacity: 0.8;
+                }
+                100% {
+                    width: 60px;
+                    height: 60px;
+                    opacity: 0;
+                }
+            }
+            
+            @keyframes puffFade {
+                0% {
+                    opacity: 0.6;
+                    transform: scale(0.5);
+                }
+                100% {
+                    opacity: 0;
+                    transform: scale(1.8);
+                }
+            }
+        `;
+        document.head.appendChild(ringStyle);
+        
+        // iniciar a chuva
+        function initRain() {
+            isRaining = true;
+            startRainProduction();
+            if (!animationFrameId) {
+                animationFrameId = requestAnimationFrame(updateRainDrops);
+            }
+        }
+        
+        // gerar fiapos de fumaça periodicamente
+        setInterval(() => {
+            if (CLOUD_ELEMENT.getBoundingClientRect().width > 0) {
+                createSmokeWisps();
+            }
+        }, 3500);
+        
+        // ajuste ao redimensionar a janela
+        window.addEventListener('resize', () => {
+            // as gotas continuam caindo naturalmente
+        });
+        
+        // inicialização
+        window.addEventListener('load', () => {
+            initRain();
+            
+            // algumas gotas iniciais
+            for (let i = 0; i < 6; i++) {
+                setTimeout(() => {
+                    createRainLetter();
+                }, i * 80);
+            }
+            
+            // criar alguns fiapos de fumaça iniciais
+            setTimeout(() => {
+                createSmokeWisps();
+                createSmokeWisps();
+            }, 500);
+        });
+        
+        // limpeza ao sair da página
+        window.addEventListener('beforeunload', () => {
+            if (rainMakerInterval) clearInterval(rainMakerInterval);
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+        });
+    })();
+</script>
+</body>
+</html>
